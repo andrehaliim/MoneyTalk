@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:money_talk/color_scheme.dart';
+import 'package:money_talk/widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -165,74 +166,62 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         SizedBox(height: 20),
-        Container(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height * 0.35,
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: moneyTalkColorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 10,
-                spreadRadius: 1,
-                offset: const Offset(0, 0),
-              ),
-            ],
-          ),
-          child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: 5,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: moneyTalkColorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
+        DefaultWidgets().defaultContainer(
+            context,
+            ListView.builder(
+                shrinkWrap: true,
+                itemCount: 5,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: moneyTalkColorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.shopping_bag_outlined,
+                            color: moneyTalkColorScheme.primary,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.shopping_bag_outlined,
-                          color: moneyTalkColorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Shopping',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: moneyTalkColorScheme.onSurface,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Shopping',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: moneyTalkColorScheme.onSurface,
+                                ),
                               ),
-                            ),
-                            Text(
-                              'Groceries - ${DateFormat('dd MMM').format(DateTime.now())}',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: moneyTalkColorScheme.onSurfaceVariant,
+                              Text(
+                                'Groceries - ${DateFormat('dd MMM').format(DateTime.now())}',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: moneyTalkColorScheme.onSurfaceVariant,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        '-\$85.00',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.redAccent,
+                        Text(
+                          '-\$85.00',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.redAccent,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-          ),
+                      ],
+                    ),
+                  );
+                }
+            ),
+            double.infinity,
+            MediaQuery.of(context).size.height * 0.3
         )
       ],
     );
