@@ -3,6 +3,9 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:money_talk/color_scheme.dart';
+import 'package:money_talk/models/transaction-model.dart';
+import 'package:money_talk/models/transaction-services.dart';
+import 'package:money_talk/pages/formatting.dart';
 import 'package:money_talk/widgets.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,20 +16,49 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final _transactionService = TransactionServices();
+  List<TransactionModel> _transactions = [];
+  bool _isLoading = false;
+  double _transactionBalance = 0.0;
+
+  @override
+  void initState() {
+    initAllTransaction();
+    super.initState();
+  }
+
+  Future<void> initAllTransaction() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    await _transactionService.getAllTransaction().then((value) {
+      setState(() {
+        _transactions = value;
+        _transactionBalance = value.fold(0.0, (sum, item) => sum + (item.isIncome ? item.amount : -item.amount));
+      });
+    });
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
         padding: EdgeInsets.symmetric(horizontal:20),
-        child: Column(
+        child: !_isLoading ? Column(
           children: [
             _userInfo(),
             SizedBox(height: 20),
-            _totalBalance(),
+            _totalBalance(_transactionBalance),
             SizedBox(height: 20),
             _activity(),
           ],
-        ),
+        ) : Center(child: CircularProgressIndicator()),
       ),
     );
   }
@@ -71,7 +103,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Container _totalBalance() {
+  Container _totalBalance(double totalBalance) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -79,9 +111,12 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
+          colors: totalBalance > 0 ? [
             moneyTalkColorScheme.onPrimaryContainer,
             moneyTalkColorScheme.primary,
+          ] : [
+            moneyTalkColorScheme.errorContainer,
+            moneyTalkColorScheme.error,
           ],
         ),
         borderRadius: BorderRadius.circular(12),
@@ -116,7 +151,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '\$1,250.00',
+            'Rp. ${Formatting().formatRupiah(totalBalance)}',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: moneyTalkColorScheme.onPrimary,
             ),
@@ -170,8 +205,10 @@ class _HomePageState extends State<HomePage> {
             context,
             ListView.builder(
                 shrinkWrap: true,
-                itemCount: 5,
+                itemCount: _transactions.length,
                 itemBuilder: (context, index) {
+                  final data = _transactions[index];
+                  
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
@@ -179,12 +216,12 @@ class _HomePageState extends State<HomePage> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: moneyTalkColorScheme.primaryContainer,
+                            color: data.isIncome ? moneyTalkColorScheme.primaryContainer : moneyTalkColorScheme.errorContainer,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            Icons.shopping_bag_outlined,
-                            color: moneyTalkColorScheme.primary,
+                            data.isIncome ? Icons.upload : Icons.download,
+                            color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -193,14 +230,14 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Shopping',
+                                data.note,
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: moneyTalkColorScheme.onSurface,
                                 ),
                               ),
                               Text(
-                                'Groceries - ${DateFormat('dd MMM').format(DateTime.now())}',
+                                DateFormat('dd MMM').format(data.date),
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: moneyTalkColorScheme.onSurfaceVariant,
                                 ),
@@ -209,10 +246,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         Text(
-                          '-\$85.00',
+                          '${data.isIncome ? '+' : '-'}Rp. ${Formatting().formatRupiah(data.amount)}',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.redAccent,
+                            color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
                           ),
                         ),
                       ],

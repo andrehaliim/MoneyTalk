@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:money_talk/home-page.dart';
-import 'package:money_talk/reports-page.dart';
-import 'package:money_talk/settings-page.dart';
-import 'package:money_talk/transaction-page.dart';
+import 'package:money_talk/pages/home/home-page.dart';
+import 'package:money_talk/models/category-services.dart';
+import 'package:money_talk/pages/reports-page.dart';
+import 'package:money_talk/pages/settings-page.dart';
+import 'package:money_talk/pages/transaction/transaction-page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -13,6 +14,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
+  final _categoryService = CategoryServices();
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -31,6 +33,15 @@ class _MainPageState extends State<MainPage> {
         _selectedIndex = index;
       });
     }
+  }
+  @override
+  void initState() {
+    initCategory();
+    super.initState();
+  }
+
+  void initCategory() async {
+    await _categoryService.initDefaultCategories();
   }
 
   @override

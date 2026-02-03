@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:money_talk/main-page.dart';
+import 'package:money_talk/pages/main/main-page.dart';
+import 'package:money_talk/objectbox-store.dart';
 import 'package:money_talk/themedata.dart';
 
-void main() {
+late ObjectBox objectbox;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  objectbox = await ObjectBox.create();
   runApp(const MyApp());
 }
 
