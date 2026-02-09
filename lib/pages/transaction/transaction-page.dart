@@ -27,6 +27,7 @@ class TransactionPageState extends State<TransactionPage> {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _generateController = TextEditingController();
 
   final List<CategoryModel> _categoryList = [];
   final Map<int, double> _categoryTotals = {};
@@ -34,6 +35,7 @@ class TransactionPageState extends State<TransactionPage> {
 
   bool _isIncome = true;
   bool _isLoading = false;
+  bool _isGenerating = false;
   int _selectedIndex = 0;
 
   void changeType() {
@@ -111,7 +113,7 @@ class TransactionPageState extends State<TransactionPage> {
             SizedBox(height: 20),
             _selectedIndex == 0 ? Expanded(child: _transaction()) : const SizedBox.shrink(),
             _selectedIndex == 1 ? Expanded(child: _addTransaction()) : const SizedBox.shrink(),
-            _selectedIndex == 2 ? Expanded(child: _generateAI()) : const SizedBox.shrink(),
+            _selectedIndex == 2 ? Expanded(child: _genTransaction()) : const SizedBox.shrink(),
           ],
         ),
       ) : Center(child: CircularProgressIndicator(),),
@@ -405,7 +407,7 @@ class TransactionPageState extends State<TransactionPage> {
     );
   }
 
-  Widget _generateAI() {
+  Widget _genTransaction() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -418,6 +420,7 @@ class TransactionPageState extends State<TransactionPage> {
         SizedBox(height: 10),
         Expanded(
           child: TextField(
+            controller: _generateController,
             style: Theme.of(context).textTheme.bodyMedium,
             expands: true,
             maxLines: null,
@@ -468,17 +471,13 @@ class TransactionPageState extends State<TransactionPage> {
             Expanded(
               child: ElevatedButton(
                 onPressed: () async {
-                  TransactionModel data = TransactionModel(
-                      amount: double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0,
-                      categoryName: _selectedCategory?.name ?? '',
-                      categoryId: _selectedCategory?.id ?? 0,
-                      note: _noteController.text,
-                      date: DateTime.now(),
-                      isIncome: _isIncome
-                  );
-                  await _transactionService.insertTransaction(data);
-                  initCategory();
-                  resetAll();
+                  setState(() {
+                    _isGenerating = true;
+                  });
+                  await Future.delayed(Duration(seconds: 5));
+                  setState(() {
+                    _isGenerating = false;
+                  });
                   context.read<FabProvider>().show();
                   showMain();
                 },
@@ -490,11 +489,15 @@ class TransactionPageState extends State<TransactionPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 ),
-                child: Text(
+                child: !_isGenerating ? Text(
                   "Save",
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: moneyTalkColorScheme.surface, fontWeight: FontWeight.bold),
+                ) : SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: moneyTalkColorScheme.surface),
                 ),
               ),
             ),
