@@ -11,7 +11,7 @@ class DefaultWidgets {
     symbol: '',
   );
 
-  Container defaultContainer(BuildContext context, Widget child, totalWidth, totalHeight) {
+  Container defaultContainer(BuildContext context, Widget child, double? totalWidth, double?totalHeight) {
     return Container(
       width: totalWidth,
       height: totalHeight,

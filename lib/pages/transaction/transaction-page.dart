@@ -8,17 +8,19 @@ import 'package:money_talk/models/transaction-services.dart';
 import 'package:money_talk/pages/formatting.dart';
 import 'package:money_talk/pages/transaction/transaction-detail-page.dart';
 import 'package:money_talk/widgets.dart';
+import 'package:provider/provider.dart';
 
 import '../../color_scheme.dart';
+import '../../provider/fab-provider.dart';
 
 class TransactionPage extends StatefulWidget {
   const TransactionPage({super.key});
 
   @override
-  State<TransactionPage> createState() => _TransactionPageState();
+  State<TransactionPage> createState() => TransactionPageState();
 }
 
-class _TransactionPageState extends State<TransactionPage> {
+class TransactionPageState extends State<TransactionPage> {
   final _categoryService = CategoryServices();
   final _transactionService = TransactionServices();
 
@@ -31,8 +33,8 @@ class _TransactionPageState extends State<TransactionPage> {
   CategoryModel? _selectedCategory;
 
   bool _isIncome = true;
-  bool _isAdding = false;
   bool _isLoading = false;
+  int _selectedIndex = 0;
 
   void changeType() {
     setState(() {
@@ -44,7 +46,19 @@ class _TransactionPageState extends State<TransactionPage> {
 
   void showAdd() {
     setState(() {
-      _isAdding = !_isAdding;
+      _selectedIndex = 1;
+    });
+  }
+
+  void showGenerate() {
+    setState(() {
+      _selectedIndex = 2;
+    });
+  }
+
+  void showMain() {
+    setState(() {
+      _selectedIndex = 0;
     });
   }
 
@@ -83,37 +97,23 @@ class _TransactionPageState extends State<TransactionPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: !_isLoading ? Stack(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                SizedBox(height: 20),
-                Text(
-                  'Transactions',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 20),
-                _typeSwitcher(),
-                SizedBox(height: 20),
-                _isAdding ? _addTransaction() : Expanded(child: _transaction()),
-              ],
+      child: !_isLoading ? Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: [
+            SizedBox(height: 20),
+            Text(
+              'Transactions',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-          ),
-          Visibility(
-            visible: !_isAdding,
-            child: Positioned(
-              bottom: 20,
-              right: 20,
-              child: FloatingActionButton(
-                onPressed: showAdd,
-                backgroundColor: moneyTalkColorScheme.tertiary,
-                child: Icon(Icons.add, color: moneyTalkColorScheme.onPrimary, size: 35),
-              ),
-            ),
-          ),
-        ],
+            SizedBox(height: 20),
+            _typeSwitcher(),
+            SizedBox(height: 20),
+            _selectedIndex == 0 ? Expanded(child: _transaction()) : const SizedBox.shrink(),
+            _selectedIndex == 1 ? Expanded(child: _addTransaction()) : const SizedBox.shrink(),
+            _selectedIndex == 2 ? Expanded(child: _generateAI()) : const SizedBox.shrink(),
+          ],
+        ),
       ) : Center(child: CircularProgressIndicator(),),
     );
   }
@@ -178,6 +178,7 @@ class _TransactionPageState extends State<TransactionPage> {
               return GestureDetector(
                 onTap: () async {
                   List<TransactionModel> list = await _transactionService.getCategoryTransactions(data.id, _isIncome);
+                  context.read<FabProvider>().hide();
 
                   bool refresh = await
                   Navigator.of(context).push(
@@ -344,7 +345,10 @@ class _TransactionPageState extends State<TransactionPage> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: showAdd,
+                onPressed: () {
+                  context.read<FabProvider>().show();
+                  showMain();
+                },
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   side: BorderSide(color: Colors.grey.withAlpha(50), width: 2),
@@ -376,7 +380,8 @@ class _TransactionPageState extends State<TransactionPage> {
                   await _transactionService.insertTransaction(data);
                   initCategory();
                   resetAll();
-                  showAdd();
+                  context.read<FabProvider>().show();
+                  showMain();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: moneyTalkColorScheme.primary,
@@ -397,6 +402,106 @@ class _TransactionPageState extends State<TransactionPage> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _generateAI() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Write your ${_isIncome ? 'Income' : 'Expense'} here and we will help you to generate your transaction.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: moneyTalkColorScheme.onSurface),
+        ),
+        SizedBox(height: 10),
+        Expanded(
+          child: TextField(
+            style: Theme.of(context).textTheme.bodyMedium,
+            expands: true,
+            maxLines: null,
+            minLines: null,
+            textAlignVertical: TextAlignVertical.top,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.withAlpha(50), width: 2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.withAlpha(50), width: 2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.withAlpha(50), width: 2),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () {
+                  context.read<FabProvider>().show();
+                  showMain();
+                },
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  side: BorderSide(color: Colors.grey.withAlpha(50), width: 2),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                ),
+                child: Text(
+                  "Cancel",
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () async {
+                  TransactionModel data = TransactionModel(
+                      amount: double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0,
+                      categoryName: _selectedCategory?.name ?? '',
+                      categoryId: _selectedCategory?.id ?? 0,
+                      note: _noteController.text,
+                      date: DateTime.now(),
+                      isIncome: _isIncome
+                  );
+                  await _transactionService.insertTransaction(data);
+                  initCategory();
+                  resetAll();
+                  context.read<FabProvider>().show();
+                  showMain();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: moneyTalkColorScheme.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  side: BorderSide(color: moneyTalkColorScheme.primary, width: 2),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                ),
+                child: Text(
+                  "Save",
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: moneyTalkColorScheme.surface, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+      ]
     );
   }
 

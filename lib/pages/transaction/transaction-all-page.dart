@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:money_talk/models/category-model.dart';
 import 'package:money_talk/models/transaction-model.dart';
 import 'package:money_talk/models/transaction-services.dart';
 import 'package:money_talk/pages/formatting.dart';
-import 'package:money_talk/provider/fab-provider.dart';
-import 'package:provider/provider.dart';
 
 import '../../color_scheme.dart';
 
-class TransactionDetailPage extends StatefulWidget {
-  final CategoryModel category;
+class TransactionAllPage extends StatefulWidget {
   final List<TransactionModel> transactions;
-  const TransactionDetailPage({super.key, required this.category, required this.transactions});
+  const TransactionAllPage({super.key, required this.transactions});
 
   @override
-  State<TransactionDetailPage> createState() => _TransactionDetailPageState();
+  State<TransactionAllPage> createState() => _TransactionAllPageState();
 }
 
-class _TransactionDetailPageState extends State<TransactionDetailPage> {
+class _TransactionAllPageState extends State<TransactionAllPage> {
   final List<TransactionModel> _listTransaction = [];
   final _transactionService = TransactionServices();
 
@@ -41,7 +37,6 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                 GestureDetector(
                   onTap: () {
                     Navigator.pop(context, true);
-                    context.read<FabProvider>().show();
                   },
                   child: Icon(
                     Icons.arrow_back_ios,
@@ -51,7 +46,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                 ),
                 Expanded(
                   child: Text(
-                    widget.category.name,
+                    'All Transactions',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
@@ -88,12 +83,12 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: widget.category.isIncome ? moneyTalkColorScheme.primaryContainer : moneyTalkColorScheme.errorContainer,
+                                color: data.isIncome ? moneyTalkColorScheme.primaryContainer : moneyTalkColorScheme.errorContainer,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
-                                widget.category.icon,
-                                color: widget.category.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
+                                data.isIncome ? Icons.keyboard_double_arrow_up : Icons.keyboard_double_arrow_down,
+                                color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -118,10 +113,10 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                               ),
                             ),
                             Text(
-                              '${widget.category.isIncome ? '+' : '-'}Rp. ${Formatting().formatRupiah(data.amount)}',
+                              '${data.isIncome ? '+' : '-'}Rp. ${Formatting().formatRupiah(data.amount)}',
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: widget.category.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
+                                color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
                               ),
                             ),
                           ],

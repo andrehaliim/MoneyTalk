@@ -6,16 +6,17 @@ import 'package:money_talk/color_scheme.dart';
 import 'package:money_talk/models/transaction-model.dart';
 import 'package:money_talk/models/transaction-services.dart';
 import 'package:money_talk/pages/formatting.dart';
+import 'package:money_talk/pages/transaction/transaction-all-page.dart';
 import 'package:money_talk/widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   final _transactionService = TransactionServices();
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
@@ -49,14 +50,41 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal:20),
+        padding: EdgeInsets.all(20),
         child: !_isLoading ? Column(
           children: [
             _userInfo(),
             SizedBox(height: 20),
             _totalBalance(_transactionBalance),
             SizedBox(height: 20),
-            _activity(),
+            Row(
+              children: [
+                Text(
+                  'Activity',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: moneyTalkColorScheme.onTertiary,
+                      fontWeight: FontWeight.bold
+                  ),
+                ),
+                Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => TransactionAllPage(transactions: _transactions)));
+
+                  },
+                  child: Text(
+                    'See all',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: moneyTalkColorScheme.primary,
+                        fontWeight: FontWeight.bold
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            _activityList(),
           ],
         ) : Center(child: CircularProgressIndicator()),
       ),
@@ -115,7 +143,7 @@ class _HomePageState extends State<HomePage> {
             moneyTalkColorScheme.onPrimaryContainer,
             moneyTalkColorScheme.primary,
           ] : [
-            moneyTalkColorScheme.errorContainer,
+            moneyTalkColorScheme.onErrorContainer,
             moneyTalkColorScheme.error,
           ],
         ),
@@ -132,22 +160,11 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                'Total Balance',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: moneyTalkColorScheme.onPrimary,
-                ),
-              ),
-              Spacer(),
-              Text(
-                'Account Details >',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: moneyTalkColorScheme.onPrimary,
-                ),
-              ),
-            ],
+          Text(
+            'Total Balance',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: moneyTalkColorScheme.onPrimary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -160,7 +177,7 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               Icon(
-                Icons.trending_up, // or Icons.arrow_outward
+                Icons.trending_up,
                 color: moneyTalkColorScheme.onPrimary,
                 size: 20,
               ),
@@ -178,89 +195,68 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Column _activity() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              'Activity',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: moneyTalkColorScheme.onTertiary,
-                fontWeight: FontWeight.bold
-              ),
-            ),
-            Spacer(),
-            Text(
-              'See all',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: moneyTalkColorScheme.primary,
-                  fontWeight: FontWeight.bold
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 20),
-        DefaultWidgets().defaultContainer(
-            context,
-            ListView.builder(
-                shrinkWrap: true,
-                itemCount: _transactions.length,
-                itemBuilder: (context, index) {
-                  final data = _transactions[index];
-                  
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: data.isIncome ? moneyTalkColorScheme.primaryContainer : moneyTalkColorScheme.errorContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            data.isIncome ? Icons.upload : Icons.download,
-                            color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                data.note,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: moneyTalkColorScheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                DateFormat('dd MMM').format(data.date),
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: moneyTalkColorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '${data.isIncome ? '+' : '-'}Rp. ${Formatting().formatRupiah(data.amount)}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
-                          ),
-                        ),
-                      ],
+  Widget _activityList() {
+    return Expanded(
+      child: DefaultWidgets().defaultContainer(
+        context,
+        ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: _transactions.length,
+            itemBuilder: (context, index) {
+              final data = _transactions[index];
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: data.isIncome ? moneyTalkColorScheme.primaryContainer : moneyTalkColorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        data.isIncome ? Icons.upload : Icons.download,
+                        color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
+                      ),
                     ),
-                  );
-                }
-            ),
-            double.infinity,
-            MediaQuery.of(context).size.height * 0.3
-        )
-      ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data.note,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: moneyTalkColorScheme.onSurface,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('dd MMM').format(data.date),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: moneyTalkColorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${data.isIncome ? '+' : '-'}Rp. ${Formatting().formatRupiah(data.amount)}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: data.isIncome ? moneyTalkColorScheme.primary : moneyTalkColorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+        ),
+        null,
+        null,
+      ),
     );
   }
 }
